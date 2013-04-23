@@ -1,0 +1,2 @@
+This CraftBukkit plugin logs every command typed on a server into a file called:
+CmdLog.log

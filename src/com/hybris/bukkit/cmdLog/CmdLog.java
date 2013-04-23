@@ -1,7 +1,7 @@
 package com.hybris.bukkit.cmdLog;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.event.player.PlayerListener;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import java.io.*;
 import org.bukkit.command.CommandSender;
@@ -16,7 +16,7 @@ import java.util.Date;
 public class CmdLog extends JavaPlugin{
 	
 	FileWriter fW = null;
-	private PlayerListener pL = null;
+	private Listener pL = null;
 	
 	public void onLoad(){
 		this.getServer().getLogger().info("[CmdLog] Loading...");
@@ -31,7 +31,7 @@ public class CmdLog extends JavaPlugin{
 				this.fW = new FileWriter(logFile, true);
 				if(this.fW != null){
 					this.pL = new CmdLogListener(this);
-					this.getServer().getPluginManager().registerEvent(Event.Type.PLAYER_COMMAND_PREPROCESS, this.pL, Event.Priority.Monitor, this);
+                    this.getServer().getPluginManager().registerEvents(this.pL, this);
 				}
 				else{
 					this.getServer().getLogger().severe("[CmdLog] Critical error : #4");
@@ -80,45 +80,7 @@ public class CmdLog extends JavaPlugin{
 		this.getServer().getLogger().info("[CmdLog] Disabled !");
 	}
 	
-	/*public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
-		if(this.fW != null){
-			
-			Date currentDate = new Date();
-			String toWrite = currentDate.toString();
-			
-			if(sender instanceof Player){
-				toWrite += "["+((Player)sender).getDisplayName()+"]";
-				toWrite +="("+((Player)sender).getAddress().toString()+")";
-			}
-			
-			if(sender.isOp()){
-				toWrite += "Operator:";
-			}
-			else{
-				toWrite += ":";
-			}
-			
-			toWrite += command.getName();
-			
-			for(int i = 0; i < args.length; i++){
-				String arg = args[i];
-				toWrite += " "+arg;
-			}
-			
-			toWrite += '\n';
-			
-			try{
-				this.fW.write(toWrite);
-			}
-			catch(IOException e){
-				this.getServer().getLogger().warning("[CmdLog] Could not write in CmdLog.log");
-			}
-			
-		}
-		return true;
-	}*/
-	
-	private class CmdLogListener extends PlayerListener{
+	private class CmdLogListener implements Listener{
 						
 		private CmdLog plugin = null;
 		
@@ -127,43 +89,37 @@ public class CmdLog extends JavaPlugin{
 			this.plugin = plugin;
 		}
 		
+        @EventHandler(priority = EventPriority.MONITOR)
 		public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event){
-				
-			/*if(event.isCancelled()){
-				return;
-			}*/
 				
 			if(this.plugin.fW != null){
 				
 				Date currentDate = new Date();
-				String toWrite = currentDate.toString();
+                
+                StringBuilder toWrite = new StringBuilder();
+                toWrite.append(currentDate.toString());
 				
 				Player sender = event.getPlayer();
-				//if(sender instanceof Player){
-					toWrite += "["+/*((Player)*/sender/*)*/.getDisplayName()+"]";
-					toWrite +="("+/*((Player)*/sender/*)*/.getAddress().toString()+")";
-				//}
+                toWrite.append("[");
+                toWrite.append(sender.getDisplayName());
+                toWrite.append("]");
+                
+                toWrite.append("(");
+                toWrite.append(sender.getAddress().toString());
+                toWrite.append(")");
+                
 				if(sender.isOp()){
-					toWrite += "Operator:";
+					toWrite.append("Operator:");
 				}
 				else{
-					toWrite += ":";
+					toWrite.append(":");
 				}
 				
-				toWrite += event.getMessage();
-				/*
-				toWrite += command.getName();
-				
-				for(int i = 0; i < args.length; i++){
-					String arg = args[i];
-					toWrite += " "+arg;
-				}
-				*/
-				
-				toWrite += '\n';
+                toWrite.append(event.getMessage());			
+				toWrite.append('\n');
 				
 				try{
-					this.plugin.fW.write(toWrite);
+					this.plugin.fW.write(toWrite.toString());
 					this.plugin.fW.flush();
 				}
 				catch(IOException e){
