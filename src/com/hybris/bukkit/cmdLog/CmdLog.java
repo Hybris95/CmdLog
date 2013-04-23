@@ -116,7 +116,7 @@ public class CmdLog extends JavaPlugin{
 				}
 				
                 toWrite.append(event.getMessage());			
-				toWrite.append('\n');
+				toWrite.append(System.getProperty("line.separator");
 				
 				try{
 					this.plugin.fW.write(toWrite.toString());
