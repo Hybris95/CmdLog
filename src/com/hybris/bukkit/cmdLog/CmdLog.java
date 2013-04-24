@@ -1,5 +1,5 @@
 /*
-    CmdLog - The Command Logger for CraftBukkit
+    CmdLog - The Command Logger plugin for CraftBukkit
     Copyright (C) 2013  Hybris95
 
     This program is free software: you can redistribute it and/or modify
