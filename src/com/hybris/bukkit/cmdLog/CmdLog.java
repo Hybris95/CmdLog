@@ -31,17 +31,17 @@ import org.bukkit.event.*;
 
 import java.util.Date;
 
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.event.server.ServerCommandEvent;
+
 public class CmdLog extends JavaPlugin{
 	
 	FileWriter fW = null;
 	private Listener pL = null;
 	
-	public void onLoad(){
-		this.getServer().getLogger().info("[CmdLog] Loading...");
-	}
+	public void onLoad(){}
 	
 	public void onEnable(){
-		this.getServer().getLogger().info("[CmdLog] Enabling...");
 		try{
 			File logFile = new File("CmdLog.log");
 			logFile.createNewFile();
@@ -52,50 +52,49 @@ public class CmdLog extends JavaPlugin{
                     this.getServer().getPluginManager().registerEvents(this.pL, this);
 				}
 				else{
-					this.getServer().getLogger().severe("[CmdLog] Critical error : #4");
+					this.getServer().getLogger().severe("[" + this.getDescription().getName() + "] Critical error : #4");
 					this.getPluginLoader().disablePlugin(this);
 					return;
 				}
-				this.getServer().getLogger().info("[CmdLog] Enabled!");
+				this.getServer().getLogger().info("[" + this.getDescription().getName() + "] Enabled!");
 			}
 			else{
-				this.getServer().getLogger().severe("[CmdLog] Cannot write on CmdLog.log !");
+				this.getServer().getLogger().severe("[" + this.getDescription().getName() + "] Cannot write on CmdLog.log !");
 				this.getPluginLoader().disablePlugin(this);
 				return;
 			}
 		}
 		catch(FileNotFoundException e){
-			this.getServer().getLogger().severe("[CmdLog] Critical error : #3");
+			this.getServer().getLogger().severe("[" + this.getDescription().getName() + "] Critical error : #3");
 			this.getPluginLoader().disablePlugin(this);
 			return;
 		}
 		catch(NullPointerException e){
-			this.getServer().getLogger().severe("[CmdLog] Critical error : #1");
+			this.getServer().getLogger().severe("[" + this.getDescription().getName() + "] Critical error : #1");
 			this.getPluginLoader().disablePlugin(this);
 			return;
 		}
 		catch(IOException e){
-			this.getServer().getLogger().severe("[CmdLog] Critical error : #2\n[CmdLog] Check if CmdLog.log is accessible !");
+			this.getServer().getLogger().severe("[" + this.getDescription().getName() + "] Critical error : #2" + System.getProperty("line.separator") + "[" + this.getDescription().getName() + "] Check if CmdLog.log is accessible !");
 			this.getPluginLoader().disablePlugin(this);
 			return;
 		}
 		catch(SecurityException e){
-			this.getServer().getLogger().severe("[CmdLog] Critical error : check your security settings");
+			this.getServer().getLogger().severe("[" + this.getDescription().getName() + "] Critical error : check your security settings");
 			this.getPluginLoader().disablePlugin(this);
 			return;
 		}
 	}
 	
 	public void onDisable(){
-		this.getServer().getLogger().info("[CmdLog] Disabling...");
 		try{
 			this.fW.close();
 		}
 		catch(IOException e){
-			this.getServer().getLogger().warning("[CmdLog] Could not close CmdLog.log!");
+			this.getServer().getLogger().warning("[" + this.getDescription().getName() + "] Could not close CmdLog.log!");
 		}
 		this.fW = null;
-		this.getServer().getLogger().info("[CmdLog] Disabled !");
+		this.getServer().getLogger().info("[" + this.getDescription().getName() + "] Disabled !");
 	}
 	
 	private class CmdLogListener implements Listener{
@@ -109,31 +108,42 @@ public class CmdLog extends JavaPlugin{
 		
         @EventHandler(priority = EventPriority.MONITOR)
 		public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event){
-				
-			if(this.plugin.fW != null){
-				
-				Date currentDate = new Date();
+            Player sender = event.getPlayer();
+            this.logIntoFile(sender.getDisplayName(), sender.getAddress().toString(), sender.isOp(), event.getMessage());
+		}
+        
+        @EventHandler(priority = EventPriority.MONITOR)
+        public void onCommandProcess(ServerCommandEvent event)
+        {
+            CommandSender sender = event.getSender();
+            this.logIntoFile(sender.getName(), "127.0.0.1", sender.isOp(), event.getCommand());
+        }
+        
+        private void logIntoFile(String senderName, String ipAddress, boolean operator, String commandMessage)
+        {
+    		if(this.plugin.fW != null)
+            {
+    			Date currentDate = new Date();
                 
                 StringBuilder toWrite = new StringBuilder();
                 toWrite.append(currentDate.toString());
-				
-				Player sender = event.getPlayer();
+                
                 toWrite.append("[");
-                toWrite.append(sender.getDisplayName());
+                toWrite.append(senderName);
                 toWrite.append("]");
                 
                 toWrite.append("(");
-                toWrite.append(sender.getAddress().toString());
+                toWrite.append(ipAddress);
                 toWrite.append(")");
                 
-				if(sender.isOp()){
+    			if(operator){
 					toWrite.append("Operator:");
 				}
 				else{
 					toWrite.append(":");
 				}
-				
-                toWrite.append(event.getMessage());			
+    			
+                toWrite.append(commandMessage);
 				toWrite.append(System.getProperty("line.separator"));
 				
 				try{
@@ -141,11 +151,10 @@ public class CmdLog extends JavaPlugin{
 					this.plugin.fW.flush();
 				}
 				catch(IOException e){
-					this.plugin.getServer().getLogger().warning("[CmdLog] Could not write in CmdLog.log");
+					this.plugin.getServer().getLogger().warning("[" + this.plugin.getDescription().getName() + "] Could not write in CmdLog.log");
 				}
-				
-			}
-		}
+    		}
+        }
 	}
 	
 }
